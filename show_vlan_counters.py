@@ -65,6 +65,11 @@ def vlan_macs(hosts, vlans):
                 line_list = line.split(" ")
                 line_list = filter(None, line_list)
                 line_list = filter(lambda name: name[:] != "*", line_list)
+                line_list = filter(lambda name: name[:] != "R", line_list)
+                
+                if line_list[0] == "R":
+                    print line_list[0]
+
                 if 'N/A' not in line and '---' not in line:
                     #print line_list
                     vlan  = str(line_list[0])
