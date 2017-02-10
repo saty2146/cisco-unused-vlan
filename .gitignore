@@ -89,6 +89,7 @@ ENV/
 .ropeproject
 
 # Saty added
-hosts.py
+devices.py
+clear_vlan_counters.py
 *.txt
 backup/

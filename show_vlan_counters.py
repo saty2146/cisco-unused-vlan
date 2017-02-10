@@ -5,8 +5,7 @@ import re
 import os
 import sys
 import pandas as pd
-from hosts import boxes
-from collections import OrderedDict
+from devices import devices
 
 pd.set_option('display.max_columns', None)
 
@@ -14,17 +13,29 @@ def check_arg(args=None):
 
     parser = argparse.ArgumentParser(description='Cisco find unused VLANs')
     maingroup = parser.add_argument_group(title='optional')
-    maingroup.add_argument('-m', '--mac_zero',
+    maingroup.add_argument('-m0', '--mac_zero',
                            help='show VLANs with ZERO MACs in mac-address-table table',
                            action='store_true')
-    maingroup.add_argument('-c', '--frame_zero',
+    maingroup.add_argument('-c0', '--frame_zero',
                            help='show VLANs with ZERO FRAMES in vlan counters',
                            action='store_true')
+    maingroup.add_argument('-s', '--static_entry',
+                           help='show only static MACs entries in mac-address-table',
+                           action='store_true')
+    maingroup.add_argument('-d', '--dynamic_entry',
+                           help='show only dynamic MACs entries in mac-address-table',
+                           action='store_true')
+    maingroup.add_argument('-v', '--vlan_id',
+                           help='show only dynamic MACs entries in mac-address-table',
+                           default=None)
 
-    results = parser.parse_args(args)
+    result = parser.parse_args(args)
 
-    return (results.mac_zero,
-            results.frame_zero,
+    return (result.mac_zero,
+            result.frame_zero,
+            result.static_entry,
+            result.dynamic_entry,
+            result.vlan_id
             )
 
 def join_vlans(hosts):
@@ -32,8 +43,8 @@ def join_vlans(hosts):
     vlans = {}
     vlan_regex = re.compile(r'^\d{1,4}')
     
-    for host in hosts:
-        with open(host + '_vlan.txt', 'r') as open_file:
+    for host in devices:
+        with open(host + '_vlan_list.txt', 'r') as open_file:
             for line in open_file:
                 line_list = line.split(" ")
                 line_list = filter(None, line_list)
@@ -46,7 +57,7 @@ def dict_to_df(d):
     df=pd.DataFrame(d.items())
     df.set_index(0, inplace=True)
     df.index.name = 'vlan'
-    df.rename(columns={1 : 'name'})
+    df.rename(columns={1 : 'name'}, inplace = True)
     return df
 
 def vlan_macs(hosts, vlans):
@@ -67,8 +78,6 @@ def vlan_macs(hosts, vlans):
     df2 = pd.DataFrame(index=vlans, columns=columns)
     df2 = df2.fillna(0)
     df  = pd.concat([df1, df2], axis=1)
-    #df.set_value('1', 'sit2_s', 10)
-    
 
     for host in hosts: 
         with open(host + '_mac_table.txt', 'r') as open_file:
@@ -95,11 +104,11 @@ def vlan_macs(hosts, vlans):
 
 def main():
     
-    mac_zero, frame_zero = check_arg(sys.argv[1:])
+    mac_zero, frame_zero, static_entry, dynamic_entry, vlan_id = check_arg(sys.argv[1:])
     
     hosts = []
 
-    for key in boxes:
+    for key in devices:
         hosts.append(key)
    
     os.chdir('./files')
@@ -107,25 +116,24 @@ def main():
     vlans = join_vlans(hosts)
     df, columns_static, columns_dynamic = vlan_macs(hosts, vlans)
     df.sort_index(inplace=True)
-    
-    print  list(df)
+    #print df.iloc[:]
 
-    if mac_zero:
-        df_zero = df.loc[(df==0).all(1)]
-        print(df_zero.to_string())
-    else:
-        #print(df[columns_static].to_string())
-        #print(df[columns_dynamic].to_string())
-
- 
-                    
-
-    #print df.ix['112']
-    #df_zero = df[any(df[df.columns[1:]] != 0, axis=1)]
-    #df_zero = df.loc[(df[1:]==0).any(axis=1)]
+    if mac_zero and static_entry:
+        df = df[columns_static]
+        df = df.loc[(df==0).all(1)]
         print(df.to_string())
-    
 
+    elif mac_zero and dynamic_entry:
+        df = df[columns_dynamic]
+        df = df.loc[(df==0).all(1)]
+        print(df.to_string())
+
+    elif mac_zero:
+        df = df[columns_static + columns_dynamic]
+        df = df.loc[(df==0).all(1)]
+        print(df.to_string())
+    else:
+        print(df.to_string())
 
 if __name__ == "__main__":
     main()
