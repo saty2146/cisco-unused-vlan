@@ -1,16 +1,20 @@
 #!/usr/bin/python
+"""
+Get useful vlan info from Cisco devices:
+
+show vlan brief
+show vlan counters
+show mac address-table | in static | dynamic
+
+and write its to files for futher processing
+
+"""
 
 import os
 from devices import devices
 from netmiko import ConnectHandler
 
 def main():
-
-    #print "Enter your cisco username:"
-    #user = raw_input()
-    #print "Enter your cisco password:"
-    #passwd = raw_input()
-    
 
     if os.path.exists('./files'):
         pass
@@ -31,41 +35,11 @@ def main():
         with open(host + '_vlan_count.txt', 'w') as open_file:
             open_file.write(output)
             
-        output= net_connect.send_command_expect('sh mac address-table | in static | dynamic')
+        output= net_connect.send_command_expect('show mac address-table | in static | dynamic')
         with open(host + '_mac_table.txt', 'w') as open_file:
             open_file.write(output)
 
     net_connect.disconnect()
 
-
-
-#    for hostname, ip in boxes.iteritems():
-#
-#        client = connect(ip, user, passwd)
-#        shell = client.invoke_shell()
-#        print "Interactive SSH session established to %s\n" % hostname
-#        send_command(shell, "terminal length 0", hostname, False)
-#    
-#        output  = send_command(shell, "show vlan brief", hostname, True)
-#
-#        with open(hostname + '_vlan.txt', 'w') as open_file:
-#            #open_file.write("\n".join(output))
-#            open_file.write(output)
-#    
-#        output  = send_command(shell, "sh vlan counters", hostname, True)
-#
-#        with open(hostname + '_vlan_counters.txt', 'w') as open_file:
-#            #open_file.write("\n".join(output))
-#            open_file.write(output)
-#
-#        output  = send_command(shell, "sh mac address-table | in static | dynamic", hostname, True)
-#
-#        with open(hostname + '_mac_table.txt', 'w') as open_file:
-#            #open_file.write("\n".join(output))
-#            open_file.write(output)
-#
-#    client.close()
-
 if __name__ == "__main__":
     main()
-
