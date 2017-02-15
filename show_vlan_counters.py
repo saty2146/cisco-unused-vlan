@@ -107,6 +107,7 @@ def main():
     mac_zero, static, dynamic, vlan_id = check_arg(sys.argv[1:])
     
     hosts = []
+    columns = []
 
     for key in devices:
         hosts.append(key)
@@ -121,20 +122,22 @@ def main():
     name_static.insert(0,'name')
     name_dynamic = list(column_dynamic)
     name_dynamic.insert(0,'name')
+    
 
     if static and dynamic:
         df = df[name_static + column_dynamic]
+        columns = list(column_static + column_dynamic)
     elif static:
         df = df[name_static]
+        columns = list(column_static)
     elif dynamic:
         df = df[name_dynamic]
+        columns = list(column_dynamic)
+    else:
+        columns = [name_static + column_dynamic]
     
-    if mac_zero and static and dynamic:
-        df = df.loc[(df[column_static + column_dynamic]==0).all(1)]
-    elif mac_zero and static:
-        df = df.loc[(df[column_static]==0).all(1)]
-    elif mac_zero and dynamic:
-        df = df.loc[(df[column_dynamic]==0).all(1)]
+    if mac_zero:
+        df = df.loc[(df[columns]==0).all(1)]
     else:
         pass
 

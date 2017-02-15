@@ -31,9 +31,9 @@ def main():
         with open(host + '_vlan_list.txt', 'w') as open_file:
             open_file.write(output)
 
-        output= net_connect.send_command_expect('show vlan counters')
-        with open(host + '_vlan_count.txt', 'w') as open_file:
-            open_file.write(output)
+#        output= net_connect.send_command_expect('show vlan counters')
+#        with open(host + '_vlan_count.txt', 'w') as open_file:
+#            open_file.write(output)
             
         output= net_connect.send_command_expect('show mac address-table | in static | dynamic')
         with open(host + '_mac_table.txt', 'w') as open_file:
